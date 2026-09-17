@@ -158,27 +158,33 @@ class DivisionVolume(_PhysicalVolume):
         )
 
         for i, v in enumerate(placements):
+            # slice parameter values are computed up front and passed as plain
+            # numbers - the mother solid's parameters must never be mutated
+            pX = float(self.motherVolume.solid.pX)
+            pY = float(self.motherVolume.solid.pY)
+            pZ = float(self.motherVolume.solid.pZ)
+
+            if self.axis == self.Axis.kXAxis:
+                pX = width
+                transforms.append([[0, 0, 0], [v, 0, 0]])
+
+            elif self.axis == self.Axis.kYAxis:
+                pY = width
+                transforms.append([[0, 0, 0], [0, v, 0]])
+
+            elif self.axis == self.Axis.kZAxis:
+                pZ = width
+                transforms.append([[0, 0, 0], [0, 0, v]])
+
             solid = _solid.Box(
                 self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pX,
-                self.motherVolume.solid.pY,
-                self.motherVolume.solid.pZ,
+                pX,
+                pY,
+                pZ,
                 self.logicalVolume.registry,
                 self.motherVolume.solid.lunit,
                 False,
             )
-
-            if self.axis == self.Axis.kXAxis:
-                solid.pX.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [v, 0, 0]])
-
-            elif self.axis == self.Axis.kYAxis:
-                solid.pY.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, v, 0]])
-
-            elif self.axis == self.Axis.kZAxis:
-                solid.pZ.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, 0, v]])
 
             meshes.append(_Mesh(solid))
         return meshes, transforms
@@ -212,33 +218,39 @@ class DivisionVolume(_PhysicalVolume):
             )
 
         for i, v in enumerate(placements):
+            pRMin = float(self.motherVolume.solid.pRMin)
+            pRMax = float(self.motherVolume.solid.pRMax)
+            pDz = float(self.motherVolume.solid.pDz)
+            pSPhi = float(self.motherVolume.solid.pSPhi)
+            pDPhi = float(self.motherVolume.solid.pDPhi)
+
+            if self.axis == self.Axis.kZAxis:
+                pDz = width
+                transforms.append([[0, 0, 0], [0, 0, v]])
+
+            elif self.axis == self.Axis.kRho:
+                pRMin = v
+                pRMax = v + width
+                transforms.append([[0, 0, 0], [0, 0, 0]])
+
+            elif self.axis == self.Axis.kPhi:
+                pSPhi = v
+                pDPhi = width
+                transforms.append([[0, 0, 0], [0, 0, 0]])
+
             solid = _solid.Tubs(
                 self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pRMin,
-                self.motherVolume.solid.pRMax,
-                self.motherVolume.solid.pDz,
-                self.motherVolume.solid.pSPhi,
-                self.motherVolume.solid.pDPhi,
+                pRMin,
+                pRMax,
+                pDz,
+                pSPhi,
+                pDPhi,
                 self.motherVolume.registry,
                 self.motherVolume.solid.lunit,
                 self.motherVolume.solid.aunit,
                 self.logicalVolume.solid.nslice,
                 False,
             )
-
-            if self.axis == self.Axis.kZAxis:
-                solid.pDz.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, 0, v]])
-
-            elif self.axis == self.Axis.kRho:
-                solid.pRMin.expression.expressionString = str(v)
-                solid.pRMax.expression.expressionString = str(v + width)
-                transforms.append([[0, 0, 0], [0, 0, 0]])
-
-            elif self.axis == self.Axis.kPhi:
-                solid.pSPhi.expression.expressionString = str(v)
-                solid.pDPhi.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, 0, 0]])
 
             meshes.append(_Mesh(solid))
 
@@ -284,47 +296,55 @@ class DivisionVolume(_PhysicalVolume):
         r_i = r1
         R_i = R1
         for i, v in enumerate(placements):
+            pRmin1 = float(self.motherVolume.solid.pRmin1)
+            pRmax1 = float(self.motherVolume.solid.pRmax1)
+            pRmin2 = float(self.motherVolume.solid.pRmin2)
+            pRmax2 = float(self.motherVolume.solid.pRmax2)
+            pDz = float(self.motherVolume.solid.pDz)
+            pSPhi = float(self.motherVolume.solid.pSPhi)
+            pDPhi = float(self.motherVolume.solid.pDPhi)
+
+            if self.axis == self.Axis.kZAxis:
+                pRmin1 = r_i
+                pRmax1 = R_i
+                h_i += width
+                r_i = r1 + h_i * dr / msize
+                R_i = R1 + h_i * dR / msize
+                pRmin2 = r_i
+                pRmax2 = R_i
+                pDz = width
+                transforms.append([[0, 0, 0], [0, 0, v]])
+
+            elif self.axis == self.Axis.kRho:
+                pRmin1 = v
+                pRmax1 = v + width
+                v_2 = (
+                    v - (r1 + offset) + (r2 + w_ratio * offset)
+                )  # Transfrom to top starting offset
+                pRmin2 = v_2
+                pRmax2 = v_2 + w_ratio * width
+                transforms.append([[0, 0, 0], [0, 0, 0]])
+
+            elif self.axis == self.Axis.kPhi:
+                pSPhi = v
+                pDPhi = width
+                transforms.append([[0, 0, 0], [0, 0, 0]])
+
             solid = _solid.Cons(
                 self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pRmin1,
-                self.motherVolume.solid.pRmax1,
-                self.motherVolume.solid.pRmin2,
-                self.motherVolume.solid.pRmax2,
-                self.motherVolume.solid.pDz,
-                self.motherVolume.solid.pSPhi,
-                self.motherVolume.solid.pDPhi,
+                pRmin1,
+                pRmax1,
+                pRmin2,
+                pRmax2,
+                pDz,
+                pSPhi,
+                pDPhi,
                 self.motherVolume.registry,
                 self.motherVolume.solid.lunit,
                 self.motherVolume.solid.aunit,
                 self.motherVolume.solid.nslice,
                 False,
             )
-
-            if self.axis == self.Axis.kZAxis:
-                solid.pRmin1.expression.expressionString = str(r_i)  # Set the radii
-                solid.pRmax1.expression.expressionString = str(R_i)
-                h_i += width
-                r_i = r1 + h_i * dr / msize
-                R_i = R1 + h_i * dR / msize
-                solid.pRmin2.expression.expressionString = str(r_i)
-                solid.pRmax2.expression.expressionString = str(R_i)
-                solid.pDz.expression.expressionString = str(width)  # Set the slice size
-                transforms.append([[0, 0, 0], [0, 0, v]])
-
-            elif self.axis == self.Axis.kRho:
-                solid.pRmin1.expression.expressionString = str(v)
-                solid.pRmax1.expression.expressionString = str(v + width)
-                v_2 = (
-                    v - (r1 + offset) + (r2 + w_ratio * offset)
-                )  # Transfrom to top starting offset
-                solid.pRmin2.expression.expressionString = str(v_2)
-                solid.pRmax2.expression.expressionString = str(v_2 + w_ratio * width)
-                transforms.append([[0, 0, 0], [0, 0, 0]])
-
-            elif self.axis == self.Axis.kPhi:
-                solid.pSPhi.expression.expressionString = str(v)
-                solid.pDPhi.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, 0, 0]])
 
             meshes.append(_Mesh(solid))
 
@@ -345,38 +365,43 @@ class DivisionVolume(_PhysicalVolume):
         )
 
         for i, v in enumerate(placements):
+            pX = float(self.motherVolume.solid.pX)
+            pY = float(self.motherVolume.solid.pY)
+            pZ = float(self.motherVolume.solid.pZ)
+            pAlpha = float(self.motherVolume.solid.pAlpha)
+            pTheta = float(self.motherVolume.solid.pTheta)
+            pPhi = float(self.motherVolume.solid.pPhi)
+
+            if self.axis == self.Axis.kXAxis:
+                pX = width / 2.0
+                transforms.append([[0, 0, 0], [v, 0, 0]])
+
+            elif self.axis == self.Axis.kYAxis:
+                pY = width / 2.0
+                transforms.append([[0, 0, 0], [v * _np.sin(pAlpha), v, 0]])
+
+            elif self.axis == self.Axis.kZAxis:
+                pZ = width / 2.0
+                transforms.append(
+                    [
+                        [0, 0, 0],
+                        [v * _np.sin(pTheta), v * _np.sin(pPhi), v * _np.cos(pPhi)],
+                    ]
+                )
+
             solid = _solid.Para(
                 self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pX,
-                self.motherVolume.solid.pY,
-                self.motherVolume.solid.pZ,
-                self.motherVolume.solid.pAlpha,
-                self.motherVolume.solid.pTheta,
-                self.motherVolume.solid.pPhi,
+                pX,
+                pY,
+                pZ,
+                pAlpha,
+                pTheta,
+                pPhi,
                 self.motherVolume.registry,
                 self.motherVolume.solid.lunit,
                 self.motherVolume.solid.aunit,
                 False,
             )
-
-            if self.axis == self.Axis.kXAxis:
-                solid.pX.expression.expressionString = str(width / 2.0)
-                transforms.append([[0, 0, 0], [v, 0, 0]])
-
-            elif self.axis == self.Axis.kYAxis:
-                solid.pY.expression.expressionString = str(width / 2.0)
-                transforms.append([[0, 0, 0], [v * _np.sin(float(solid.pAlpha)), v, 0]])
-
-            elif self.axis == self.Axis.kZAxis:
-                theta = float(solid.pTheta)
-                phi = float(solid.pPhi)
-                solid.pZ.expression.expressionString = str(width / 2.0)
-                transforms.append(
-                    [
-                        [0, 0, 0],
-                        [v * _np.sin(theta), v * _np.sin(phi), v * _np.cos(phi)],
-                    ]
-                )
 
             meshes.append(_Mesh(solid))
 
@@ -408,37 +433,44 @@ class DivisionVolume(_PhysicalVolume):
         h_i = 0.0
 
         for i, v in enumerate(placements):
+            pX1 = float(self.motherVolume.solid.pX1)
+            pX2 = float(self.motherVolume.solid.pX2)
+            pY1 = float(self.motherVolume.solid.pY1)
+            pY2 = float(self.motherVolume.solid.pY2)
+            pZ = float(self.motherVolume.solid.pZ)
+
+            if self.axis == self.Axis.kXAxis:
+                pX1 = width
+                pX2 = width
+                transforms.append([[0, 0, 0], [v, 0, 0]])
+
+            elif self.axis == self.Axis.kYAxis:
+                pY1 = width
+                pY2 = width
+                transforms.append([[0, 0, 0], [0, v, 0]])
+
+            elif self.axis == self.Axis.kZAxis:
+                pX1 = x_i
+                pY1 = y_i
+                h_i += width
+                x_i = x1 + h_i * dX / msize
+                y_i = y1 + h_i * dY / msize
+                pX2 = x_i
+                pY2 = y_i
+                pZ = width
+                transforms.append([[0, 0, 0], [0, 0, v]])
+
             solid = _solid.Trd(
                 self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pX1,
-                self.motherVolume.solid.pX2,
-                self.motherVolume.solid.pY1,
-                self.motherVolume.solid.pY2,
-                self.motherVolume.solid.pZ,
+                pX1,
+                pX2,
+                pY1,
+                pY2,
+                pZ,
                 self.motherVolume.registry,
                 self.motherVolume.solid.lunit,
                 False,
             )
-            if self.axis == self.Axis.kXAxis:
-                solid.pX1.expression.expressionString = str(width)
-                solid.pX2.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [v, 0, 0]])
-
-            elif self.axis == self.Axis.kYAxis:
-                solid.pY1.expression.expressionString = str(width)
-                solid.pY2.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, v, 0]])
-
-            elif self.axis == self.Axis.kZAxis:
-                solid.pX1.expression.expressionString = str(x_i)
-                solid.pY1.expression.expressionString = str(y_i)
-                h_i += width
-                x_i = x1 + h_i * dX / msize
-                y_i = y1 + h_i * dY / msize
-                solid.pX2.expression.expressionString = str(x_i)
-                solid.pY2.expression.expressionString = str(y_i)
-                solid.pZ.expression.expressionString = str(width)
-                transforms.append([[0, 0, 0], [0, 0, v]])
 
             meshes.append(_Mesh(solid))
 
@@ -508,48 +540,44 @@ class DivisionVolume(_PhysicalVolume):
                 h_i = offset - sum(zpl_sizes[:zsl_index])
 
         for i, v in enumerate(placements):
-            solid = _solid.Polycone(
-                self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pSPhi,
-                self.motherVolume.solid.pDPhi,
-                self.motherVolume.solid.pZpl,
-                self.motherVolume.solid.pRMin,
-                self.motherVolume.solid.pRMax,
-                self.motherVolume.registry,
-                self.motherVolume.solid.lunit,
-                self.motherVolume.solid.aunit,
-                self.motherVolume.solid.nslice,
-                False,
-            )
+            pSPhi = float(self.motherVolume.solid.pSPhi)
+            pDPhi = float(self.motherVolume.solid.pDPhi)
+            pZpl = [float(t) for t in self.motherVolume.solid.pZpl]
+            pRMin = [float(t) for t in self.motherVolume.solid.pRMin]
+            pRMax = [float(t) for t in self.motherVolume.solid.pRMax]
 
             if self.axis == self.Axis.kRho:
-                r_0 = float(self.motherVolume.solid.pRMin[0])
-                w_0 = float(self.motherVolume.solid.pRMax[0]) - r_0
-                for i in range(len(solid.pRMin)):
-                    r_i = float(self.motherVolume.solid.pRMin[i])
-                    w_i = float(self.motherVolume.solid.pRMax[i]) - r_i
-                    w_ratio_i = w_i / w_0
-                    v_2 = w_ratio_i * (v - (r_0 + offset)) + (
-                        r_i + w_ratio_i * offset
+                r_0 = pRMin[0]
+                w_0 = pRMax[0] - r_0
+                pRMinNew = []
+                pRMaxNew = []
+                for j in range(len(pRMin)):
+                    r_j = pRMin[j]
+                    w_j = pRMax[j] - r_j
+                    w_ratio_j = w_j / w_0
+                    v_2 = w_ratio_j * (v - (r_0 + offset)) + (
+                        r_j + w_ratio_j * offset
                     )  # Proprtional increase
-                    solid.pRMin[i].expression.expressionString = str(v_2)
-                    solid.pRMax[i].expression.expressionString = str(v_2 + w_ratio_i * width)
+                    pRMinNew.append(v_2)
+                    pRMaxNew.append(v_2 + w_ratio_j * width)
+                pRMin = pRMinNew
+                pRMax = pRMaxNew
                 transforms.append([[0, 0, 0], [0, 0, 0]])
 
             elif self.axis == self.Axis.kPhi:
-                solid.pSPhi.expression.expressionString = str(v)
-                solid.pDPhi.expression.expressionString = str(width)
+                pSPhi = v
+                pDPhi = width
                 transforms.append([[0, 0, 0], [0, 0, 0]])
 
             elif self.axis == self.Axis.kZAxis:
                 if ndiv * width == msize:
                     # This is the default case and we don't actually need the calculated
                     # placements, only the indices
-                    if i == len(solid.pRMin) - 1:
+                    if i == len(pRMin) - 1:
                         continue  # As we split into (nzplanes - 1) polycones
-                    solid.pRMin = solid.pRMin[i : i + 2]
-                    solid.pRMax = solid.pRMax[i : i + 2]
-                    solid.pZpl = solid.pZpl[i : i + 2]
+                    pRMin = pRMin[i : i + 2]
+                    pRMax = pRMax[i : i + 2]
+                    pZpl = pZpl[i : i + 2]
                 else:
                     r_min = []
                     r_max = []
@@ -558,10 +586,24 @@ class DivisionVolume(_PhysicalVolume):
                     h_i += width
                     r_min.append(r_1 + h_i * dr / dz)
                     r_max.append(R_1 + h_i * dR / dz)
-                    solid.pRMin = r_min
-                    solid.pRMax = r_max
-                    solid.pZpl = [v, v + width]
+                    pRMin = r_min
+                    pRMax = r_max
+                    pZpl = [v, v + width]
                     transforms.append([[0, 0, 0], [0, 0, 0]])
+
+            solid = _solid.Polycone(
+                self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
+                pSPhi,
+                pDPhi,
+                pZpl,
+                pRMin,
+                pRMax,
+                self.motherVolume.registry,
+                self.motherVolume.solid.lunit,
+                self.motherVolume.solid.aunit,
+                self.motherVolume.solid.nslice,
+                False,
+            )
 
             meshes.append(_Mesh(solid))
 
@@ -631,50 +673,46 @@ class DivisionVolume(_PhysicalVolume):
                 h_i = offset - sum(zpl_sizes[:zsl_index])
 
         for i, v in enumerate(placements):
-            solid = _solid.Polyhedra(
-                self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
-                self.motherVolume.solid.pSPhi,
-                self.motherVolume.solid.pDPhi,
-                self.motherVolume.solid.numSide,
-                self.motherVolume.solid.numZPlanes,
-                self.motherVolume.solid.zPlane,
-                self.motherVolume.solid.rInner,
-                self.motherVolume.solid.rOuter,
-                self.motherVolume.registry,
-                self.motherVolume.solid.lunit,
-                self.motherVolume.solid.aunit,
-                False,
-            )
+            pSPhi = float(self.motherVolume.solid.pSPhi)
+            pDPhi = float(self.motherVolume.solid.pDPhi)
+            numSide = float(self.motherVolume.solid.numSide)
+            zPlane = [float(t) for t in self.motherVolume.solid.zPlane]
+            rInner = [float(t) for t in self.motherVolume.solid.rInner]
+            rOuter = [float(t) for t in self.motherVolume.solid.rOuter]
 
             if self.axis == self.Axis.kRho:
-                r_0 = float(self.motherVolume.solid.rInner[0])
-                w_0 = float(self.motherVolume.solid.rOuter[0]) - r_0
-                for i in range(len(solid.rInner)):
-                    r_i = float(self.motherVolume.solid.rInner[i])
-                    w_i = float(self.motherVolume.solid.rOuter[i]) - r_i
-                    w_ratio_i = w_i / w_0
-                    v_2 = w_ratio_i * (v - (r_0 + offset)) + (
-                        r_i + w_ratio_i * offset
+                r_0 = rInner[0]
+                w_0 = rOuter[0] - r_0
+                rInnerNew = []
+                rOuterNew = []
+                for j in range(len(rInner)):
+                    r_j = rInner[j]
+                    w_j = rOuter[j] - r_j
+                    w_ratio_j = w_j / w_0
+                    v_2 = w_ratio_j * (v - (r_0 + offset)) + (
+                        r_j + w_ratio_j * offset
                     )  # Proprtional increase
-                    solid.rInner[i].expression.expressionString = str(v_2)
-                    solid.rOuter[i].expression.expressionString = str(v_2 + w_ratio_i * width)
+                    rInnerNew.append(v_2)
+                    rOuterNew.append(v_2 + w_ratio_j * width)
+                rInner = rInnerNew
+                rOuter = rOuterNew
                 transforms.append([[0, 0, 0], [0, 0, 0]])
 
             elif self.axis == self.Axis.kPhi:
-                solid.pSPhi.expression.expressionString = str(v)
-                solid.pDPhi.expression.expressionString = str(dphi / nsides)
-                solid.numSide.expression.expressionString = "1"
+                pSPhi = v
+                pDPhi = dphi / nsides
+                numSide = 1
                 transforms.append([[0, 0, 0], [0, 0, 0]])
 
             elif self.axis == self.Axis.kZAxis:
                 if ndiv * width == msize:
                     # This is the default case and we don't actually need the calculated
                     # placements, only the indices
-                    if i == len(solid.rInner) - 1:
+                    if i == len(rInner) - 1:
                         continue  # As we split into (nzplanes - 1) polycones
-                    solid.rInner = solid.rInner[i : i + 2]
-                    solid.rOuter = solid.rOuter[i : i + 2]
-                    solid.zPlane = solid.zPlane[i : i + 2]
+                    rInner = rInner[i : i + 2]
+                    rOuter = rOuter[i : i + 2]
+                    zPlane = zPlane[i : i + 2]
                 else:
                     r_min = []
                     r_max = []
@@ -683,10 +721,25 @@ class DivisionVolume(_PhysicalVolume):
                     h_i += width
                     r_min.append(r_1 + h_i * dr / dz)
                     r_max.append(R_1 + h_i * dR / dz)
-                    solid.rInner = r_min
-                    solid.rOuter = r_max
-                    solid.zPlane = [v, v + width]
+                    rInner = r_min
+                    rOuter = r_max
+                    zPlane = [v, v + width]
                     transforms.append([[0, 0, 0], [0, 0, 0]])
+
+            solid = _solid.Polyhedra(
+                self.name + "_" + self.motherVolume.solid.name + "_" + str(i),
+                pSPhi,
+                pDPhi,
+                numSide,
+                self.motherVolume.solid.numZPlanes,
+                zPlane,
+                rInner,
+                rOuter,
+                self.motherVolume.registry,
+                self.motherVolume.solid.lunit,
+                self.motherVolume.solid.aunit,
+                False,
+            )
 
             meshes.append(_Mesh(solid))
 
