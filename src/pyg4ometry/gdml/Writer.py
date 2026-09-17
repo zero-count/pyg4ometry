@@ -489,7 +489,7 @@ option, physicsList="em";
         axes = {1: "kXAxis", 2: "kYAxis", 3: "kZAxis", 4: "kRho", 5: "kPhi"}
         dvol.setAttribute("axis", axes[instance.axis])
         dvol.setAttribute("width", str(float(instance.width)))
-        dvol.setAttribute("offset", str(float(instance.width)))
+        dvol.setAttribute("offset", str(float(instance.offset)))
         if instance.unit:
             dvol.setAttribute("unit", instance.unit)
 
