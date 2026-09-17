@@ -27,9 +27,7 @@ def test_DivisionVolumeOffsetWrittenCorrectly(tmp_path):
     ml = _g4.LogicalVolume(ms, wm, "ml", reg)
     dl = _g4.LogicalVolume(ds, bm, "dl", reg)
 
-    _g4.DivisionVolume(
-        "dv", dl, ml, _g4.DivisionVolume.Axis.kZAxis, 8, 10, 5, reg, True, "mm"
-    )
+    _g4.DivisionVolume("dv", dl, ml, _g4.DivisionVolume.Axis.kZAxis, 8, 10, 5, reg, True, "mm")
     _g4.PhysicalVolume([0, 0, 0], [0, 0, 0], ml, "ml_pv", wl, reg)
     reg.setWorld(wl.name)
 
