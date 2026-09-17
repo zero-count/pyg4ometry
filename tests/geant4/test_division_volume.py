@@ -30,9 +30,7 @@ def test_DivisionMeshesDoNotMutateMotherSolidBox():
     ml = _g4.LogicalVolume(ms, wm, "ml", reg)
     dl = _g4.LogicalVolume(ds, bm, "dl", reg)
 
-    _g4.DivisionVolume(
-        "dv", dl, ml, _g4.DivisionVolume.Axis.kXAxis, 5, 20, 0, reg, True, "mm"
-    )
+    _g4.DivisionVolume("dv", dl, ml, _g4.DivisionVolume.Axis.kXAxis, 5, 20, 0, reg, True, "mm")
 
     assert float(ms.pX) == 100.0
     assert float(ms.pY) == 100.0
@@ -55,9 +53,7 @@ def test_DivisionMeshesDoNotMutateMotherSolidTubs():
     ml = _g4.LogicalVolume(ms, wm, "ml", reg)
     dl = _g4.LogicalVolume(ds, bm, "dl", reg)
 
-    _g4.DivisionVolume(
-        "dv", dl, ml, _g4.DivisionVolume.Axis.kRho, 5, 10, 0, reg, True, "mm"
-    )
+    _g4.DivisionVolume("dv", dl, ml, _g4.DivisionVolume.Axis.kRho, 5, 10, 0, reg, True, "mm")
 
     assert float(ms.pRMin) == 0.0
     assert float(ms.pRMax) == 50.0
@@ -81,9 +77,7 @@ def test_DivisionWithPlainFloatMotherParameters():
     ml = _g4.LogicalVolume(ms, wm, "ml", reg)
     dl = _g4.LogicalVolume(ds, bm, "dl", reg)
 
-    dv = _g4.DivisionVolume(
-        "dv", dl, ml, _g4.DivisionVolume.Axis.kXAxis, 5, 20, 0, reg, True, "mm"
-    )
+    dv = _g4.DivisionVolume("dv", dl, ml, _g4.DivisionVolume.Axis.kXAxis, 5, 20, 0, reg, True, "mm")
 
     assert len(dv.meshes) == 5
     assert float(dv.meshes[0].solid.pX) == 20.0
